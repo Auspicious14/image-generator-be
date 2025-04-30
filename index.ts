@@ -3,6 +3,8 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 export const appRoute = express();
+import authRouter from "./routes/auth";
+import imageRouter from "./routes/image";
 
 dotenv.config();
 const allowedOrigins = process.env.CLIENT_URL
@@ -38,3 +40,5 @@ appRoute.use(cookieParser());
 appRoute.get("/", (req, res) => {
   res.send("Backend is working!");
 });
+appRoute.use(authRouter);
+appRoute.use(imageRouter);

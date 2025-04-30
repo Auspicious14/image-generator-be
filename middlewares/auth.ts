@@ -6,7 +6,7 @@ interface JwtPayload {
 }
 
 export const authenticateToken = (
-  req: Request & { user?: any },
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -15,7 +15,7 @@ export const authenticateToken = (
 
   jwt.verify(token, process.env.JWT_SECRET!, (err, user) => {
     if (err) return res.sendStatus(403);
-    req.user = user as JwtPayload;
+    (req as any).user = user as JwtPayload;
     next();
   });
 };
