@@ -6,9 +6,10 @@ dotenv.config();
 const url = process.env.API_URL;
 export const generateImage = async (req: Request, res: Response) => {
   const { prompt } = req.body;
+  console.log({prompt})
   try {
     const imageUrl = `${url}${encodeURIComponent(prompt)}`;
-
+console.log({imageUrl})
     const image = await imageModel.create({ prompt, imageUrl });
     res.status(201).json({ success: true, data: image });
   } catch (error) {
