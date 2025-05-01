@@ -6,6 +6,7 @@ dotenv.config();
 const url = process.env.API_URL;
 export const generateImage = async (req: Request, res: Response) => {
   const { prompt } = req.body;
+
   try {
     const imageUrl = `${url}${encodeURIComponent(prompt)}`;
 
