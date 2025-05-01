@@ -9,7 +9,7 @@ import imageRouter from "./routes/image";
 dotenv.config();
 const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(",").map((url) => url.trim())
-  : ["http://localhost:3000"];
+  : ["http://localhost:3002"];
 
 console.log("CORS Allowed Origins:", allowedOrigins);
 

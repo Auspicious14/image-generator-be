@@ -3,7 +3,7 @@ import { getImages, generateImage } from "../controllers/image";
 import { authenticateToken } from "../middlewares/auth";
 const router = express.Router();
 
-router.get("/image", authenticateToken, getImages);
+router.get("/images", authenticateToken, getImages);
 router.post("/generate/image", generateImage);
 
 export default router;

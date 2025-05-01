@@ -9,7 +9,7 @@ export const generateImage = async (req: Request, res: Response) => {
   try {
     const imageUrl = `${url}${encodeURIComponent(prompt)}`;
 
-    const image = await imageModel.create({ prompt, url: imageUrl });
+    const image = await imageModel.create({ prompt, imageUrl });
     res.status(201).json({ success: true, data: image });
   } catch (error) {
     res.json({ success: false, error });
