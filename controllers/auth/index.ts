@@ -5,6 +5,7 @@ import { generateOTP } from "../../middlewares/generateOTP";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { userModel } from "../../models/user";
+import { imageModel } from "../../models/image";
 dotenv.config();
 
 const JWT_SECRET: any = process.env.JWT_SECRET;
@@ -32,10 +33,17 @@ export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   try {
     const user: any = await userModel.findOne({ email });
-    if (!user) res.json({ message: "Invalid Email or Password" });
+    if (!user)
+      res.json({ success: false, message: "Invalid Email or Password" });
 
     const verifyPassword = await argon2.verify(user?.password, password);
-    if (!verifyPassword) res.json({ message: "Invalid Email or Password" });
+    if (!verifyPassword)
+      res.json({ success: false, message: "Invalid Email or Password" });
+
+    await imageModel.updateMany(
+      { sessionId: (req as any).sessionID },
+      { userId: user._id }
+    );
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, {
       expiresIn: "3d",

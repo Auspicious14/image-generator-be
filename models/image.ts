@@ -7,6 +7,7 @@ const imageSchema = new Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
     prompt: { type: String },
     imageUrl: { type: String },
+    sessionId: { type: String },
   },
   { timestamps: true }
 );
