@@ -6,9 +6,20 @@ dotenv.config();
 const url = process.env.API_URL;
 export const generateImage = async (req: Request, res: Response) => {
   const { prompt } = req.body;
-
+  const params = {
+    model: "turbo",
+    height: "1024",
+    width: "1024",
+    seed: 42,
+    nologo: true,
+    enhance: true,
+  };
   try {
-    const imageUrl = `${url}${encodeURIComponent(prompt)}`;
+    const imageUrl = `${url}${encodeURIComponent(prompt)}?model=${
+      params.model
+    }&width=${params.width}&height=${params.height}&seed=${
+      params.seed
+    }&nologo=${params.nologo}&enhance=${params.enhance}`;
 
     const image = await imageModel.create({
       prompt,
