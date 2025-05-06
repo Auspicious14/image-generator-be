@@ -39,14 +39,19 @@ console.log("ENV:", process.env.CLIENT_URL);
 appRoute.use(express.json({ limit: "50mb" }));
 appRoute.use(express.urlencoded({ limit: "50mb", extended: true }));
 appRoute.use(cookieParser());
-appRoute.use(
-  session({
-    secret: sessionKey,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: true, maxAge: 86400000 },
-  })
-);
+// appRoute.use(
+//   session({
+//     secret: sessionKey,
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: {
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "lax",
+//       maxAge: 86400000,
+//     },
+//   })
+// );
+// appRoute.set("trust proxy", 1);
 appRoute.get("/", (req, res) => {
   res.send("Backend is working!");
 });

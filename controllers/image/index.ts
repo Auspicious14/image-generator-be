@@ -7,13 +7,14 @@ const url = process.env.API_URL;
 export const generateImage = async (req: Request, res: Response) => {
   const { prompt } = req.body;
   const params = {
-    model: "turbo",
+    model: "flux",
     height: "1024",
     width: "1024",
     seed: 42,
     nologo: true,
     enhance: true,
   };
+
   try {
     const imageUrl = `${url}${encodeURIComponent(prompt)}?model=${
       params.model
@@ -25,7 +26,6 @@ export const generateImage = async (req: Request, res: Response) => {
       prompt,
       imageUrl,
       userId: (req as any).user?.id,
-      sessionId: (req as any).sessionID,
     });
     res.status(201).json({ success: true, data: image });
   } catch (error) {
@@ -37,10 +37,7 @@ export const getImages = async (req: Request, res: Response) => {
   try {
     const images = await imageModel
       .find({
-        $or: [
-          { userId: (req as any).user.id },
-          { sessionId: (req as any).sessionID },
-        ],
+        $or: [{ userId: (req as any).user.id }],
       })
       .sort({ createdAt: -1 });
     res.status(201).json({ success: true, data: images });

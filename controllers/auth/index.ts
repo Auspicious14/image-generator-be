@@ -40,11 +40,6 @@ export const login = async (req: Request, res: Response) => {
     if (!verifyPassword)
       res.json({ success: false, message: "Invalid Email or Password" });
 
-    await imageModel.updateMany(
-      { sessionId: (req as any).sessionID },
-      { userId: user._id }
-    );
-
     const token = jwt.sign({ id: user._id }, JWT_SECRET, {
       expiresIn: "3d",
     });
@@ -62,7 +57,7 @@ export const login = async (req: Request, res: Response) => {
         firstName: user?.firstName,
         lastName: user?.lastName,
         email: user?.email,
-        token
+        token,
       },
     });
   } catch (error) {
