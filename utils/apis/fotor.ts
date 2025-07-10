@@ -32,15 +32,17 @@ export interface Image {
   [property: string]: any;
 }
 
-export const transformWithFotor = async (userImageUrl: string, prompt: string): Promise<string> => {
+export const transformWithFotor = async (
+  userImageUrl: string,
+  prompt: string
+): Promise<string> => {
   try {
-    // Step 1: Submit image-to-image transformation task
     const submitResponse = await axios.post(
       "https://api-b.fotor.com/v1/aiart/img2img",
       {
         userImageUrl,
         content: prompt,
-        templateId: "282ce369-a0d9-4996-b8dd-f1520766d50f", // Studio Ghibli template
+        templateId: "282ce369-a0d9-4996-b8dd-f1520766d50f",
         negativePrompt: "blurry, nude",
         strength: 0.8,
         format: "jpg",
@@ -54,24 +56,31 @@ export const transformWithFotor = async (userImageUrl: string, prompt: string): 
       }
     );
 
-    if (submitResponse.data.code !== "000" || submitResponse.data.msg !== "success") {
-      throw new Error(`Fotor task submission failed: ${submitResponse.data.msg}`);
+    if (
+      submitResponse.data.code !== "000" ||
+      submitResponse.data.msg !== "success"
+    ) {
+      throw new Error(
+        `Fotor task submission failed: ${submitResponse.data.msg}`
+      );
     }
 
     const taskId = submitResponse.data.data.taskId;
 
-    // Step 2: Poll task status until complete
     const maxAttempts = 10;
-    const pollInterval = 3000; // 3 seconds
+    const pollInterval = 3000;
     let attempts = 0;
 
     while (attempts < maxAttempts) {
-      const taskResponse = await axios.get(`https://api-b.fotor.com/v1/aiart/tasks/${taskId}`, {
-        headers: {
-          Authorization: `Bearer ${process.env.FOTOR_API_KEY}`,
-        },
-        timeout: 30000,
-      });
+      const taskResponse = await axios.get(
+        `https://api-b.fotor.com/v1/aiart/tasks/${taskId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.FOTOR_API_KEY}`,
+          },
+          timeout: 30000,
+        }
+      );
 
       const taskData: ApifoxModel = taskResponse.data;
 
@@ -92,13 +101,12 @@ export const transformWithFotor = async (userImageUrl: string, prompt: string): 
         throw new Error("Task failed");
       }
 
-      // Task still in progress (status 0), wait and retry
       attempts++;
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
 
     throw new Error("Task did not complete within maximum attempts");
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`Fotor API failed: ${error.message}`);
   }
 };

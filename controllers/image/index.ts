@@ -48,15 +48,14 @@ export const getImages = async (req: Request, res: Response) => {
 */
 
 import { Request, Response } from "express";
-import { imageModel } from "../models/image";
-import { userModel } from "../models/user";
+import { imageModel } from "../../models/image";
+import { userModel } from "../../models/user";
 import dotenv from "dotenv";
-import { mapFiles, IFile } from "../middlewares/files";
-import { isSameDay } from "../utils/date";
-import { transformationApis } from "../utils/api";
+import { mapFiles, IFile } from "../../middlewares/files";
+import { isSameDay } from "../../utils/date";
+import { transformationApis } from "../../utils/apis";
 
 dotenv.config();
-
 
 const url = process.env.API_URL;
 export const generateImage = async (req: Request, res: Response) => {
@@ -71,11 +70,11 @@ export const generateImage = async (req: Request, res: Response) => {
   };
 
   try {
-    const imageUrl = `${url}${encodeURIComponent(prompt)}?model=${params.model}&width=${
-      params.width
-    }&height=${params.height}&seed=${params.seed}&nologo=${params.nologo}&enhance=${
-      params.enhance
-    }`;
+    const imageUrl = `${url}${encodeURIComponent(prompt)}?model=${
+      params.model
+    }&width=${params.width}&height=${params.height}&seed=${
+      params.seed
+    }&nologo=${params.nologo}&enhance=${params.enhance}`;
 
     const image = await imageModel.create({
       prompt,
@@ -83,26 +82,27 @@ export const generateImage = async (req: Request, res: Response) => {
       userId: (req as any).user?.id,
     });
     res.status(201).json({ success: true, data: image });
-  } catch (error) {
+  } catch (error: any) {
     res.json({ success: false, error: error.message });
   }
 };
 
-
 export const transformImage = async (req: Request, res: Response) => {
   try {
-    
-    const { image, prompt: customPrompt }: { image: IFile, prompt: string } = req.body;
+    const { image, prompt: customPrompt }: { image: IFile; prompt: string } =
+      req.body;
     if (!image || !image.uri || !image.name || !image.type) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: "Image object with uri, name, and type is required",
       });
+      return;
     }
 
     const user = await userModel.findById((req as any).user.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
     }
 
     const today = new Date();
@@ -115,10 +115,11 @@ export const transformImage = async (req: Request, res: Response) => {
     }
 
     if (user.generationCount >= 5) {
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         message: "Daily limit of 5 transformations reached",
       });
+      return;
     }
 
     const imageUrl = await mapFiles([image]);
@@ -127,10 +128,9 @@ export const transformImage = async (req: Request, res: Response) => {
       customPrompt ||
       "Transform this image into a Studio Ghibli-style illustration with soft pastel colors, dreamy backgrounds, and whimsical details in the style of My Neighbor Totoro.";
 
-
     for (const apiFunc of transformationApis) {
       try {
-        const transformedImageUrl = await apiFunc(imageUrl, prompt);
+        const transformedImageUrl = await apiFunc(imageUrl[0].uri, prompt);
         const image = await imageModel.create({
           prompt,
           imageUrl: transformedImageUrl,
@@ -140,19 +140,22 @@ export const transformImage = async (req: Request, res: Response) => {
         user.generationCount += 1;
         await user.save();
 
-        return res.status(201).json({ success: true, data: image });
-      } catch (error) {
+        res.status(201).json({ success: true, data: image });
+        return;
+      } catch (error: any) {
         console.error(`Error with ${apiFunc.name}:`, error.message);
         // Continue to next API
       }
     }
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "All APIs failed to transform the image",
     });
-  } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+    return;
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+    return;
   }
 };
 
@@ -164,7 +167,7 @@ export const getImages = async (req: Request, res: Response) => {
       })
       .sort({ createdAt: -1 });
     res.status(201).json({ success: true, data: images });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 };

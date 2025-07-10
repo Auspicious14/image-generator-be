@@ -1,12 +1,15 @@
 import axios from "axios";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
-export const transformWithGrok = async (imageUrl: string, prompt: string): Promise<string> => {
+export const transformWithGrok = async (
+  imageUrl: string,
+  prompt: string
+): Promise<string> => {
   try {
     const response = await axios.post(
-      "https://api.x.ai/grok3/transform", 
+      "https://api.x.ai/grok3/transform",
       {
         imageUrl,
         prompt,
@@ -19,8 +22,8 @@ export const transformWithGrok = async (imageUrl: string, prompt: string): Promi
         timeout: 30000,
       }
     );
-    return response.data.imageUrl; 
-  } catch (error) {
+    return response.data.imageUrl;
+  } catch (error: any) {
     throw new Error(`Grok API failed: ${error.message}`);
   }
 };
