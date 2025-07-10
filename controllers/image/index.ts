@@ -51,7 +51,7 @@ import { Request, Response } from "express";
 import { imageModel } from "../models/image";
 import { userModel } from "../models/user";
 import dotenv from "dotenv";
-import { mapFiles } from "../middlewares/files";
+import { mapFiles, IFile } from "../middlewares/files";
 import { isSameDay } from "../utils/date";
 import { transformationApis } from "../utils/api";
 
@@ -92,7 +92,7 @@ export const generateImage = async (req: Request, res: Response) => {
 export const transformImage = async (req: Request, res: Response) => {
   try {
     
-    const { image, prompt: customPrompt } = req.body;
+    const { image, prompt: customPrompt }: { image: IFile, prompt: string } = req.body;
     if (!image || !image.uri || !image.name || !image.type) {
       return res.status(400).json({
         success: false,
