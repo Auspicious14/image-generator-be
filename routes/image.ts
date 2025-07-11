@@ -5,6 +5,6 @@ const router = express.Router();
 
 router.get("/images", authenticateToken, getImages);
 router.post("/generate/image", authenticateToken, generateImage);
-router.post("/generate/transform-image", authenticateToken, transformImage);
+router.post("/transform/image", authenticateToken, transformImage);
 
 export default router;
