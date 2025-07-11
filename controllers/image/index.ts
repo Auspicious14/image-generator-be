@@ -212,7 +212,6 @@ export const transformImage = async (req: Request, res: Response) => {
         responseType: "arraybuffer",
       });
 
-      // Upload transformed image to Cloudinary
       const transformedImageBase64 = Buffer.from(response.data).toString(
         "base64"
       );
@@ -223,15 +222,13 @@ export const transformImage = async (req: Request, res: Response) => {
       };
       const transformedImageUrl = await mapFiles([transformedImageData]);
 
-      // Save to database
       const imageRecord = await imageModel.create({
         prompt,
-        imageUrl: imageUrl[0].uri, // Original image URL
-        transformedImageUrl: transformedImageUrl[0].uri, // Transformed image URL
+        imageUrl: imageUrl[0].uri,
+        transformedImageUrl: transformedImageUrl[0].uri,
         userId: (req as any).user.id,
       });
 
-      // Update user generation count
       user.generationCount += 1;
       await user.save();
 

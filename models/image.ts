@@ -8,6 +8,7 @@ const imageSchema = new Schema(
     prompt: { type: String },
     imageUrl: { type: String },
     sessionId: { type: String },
+    transformedImageUrl: { type: String },
   },
   { timestamps: true }
 );
