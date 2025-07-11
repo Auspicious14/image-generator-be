@@ -18,6 +18,7 @@
     "argon": "^2.0.21",
     "argon2": "^0.43.0",
     "axios": "^1.10.0",
+    "cloudinary": "^2.7.0",
     "connect-mongo": "^5.1.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
