@@ -54,6 +54,7 @@ import dotenv from "dotenv";
 import { mapFiles, IFile } from "../../middlewares/files";
 import { isSameDay } from "../../utils/date";
 import { transformationApis } from "../../utils/apis";
+import axios from 'axios';
 
 dotenv.config();
 
@@ -87,7 +88,7 @@ export const generateImage = async (req: Request, res: Response) => {
   }
 };
 
-export const transformImage = async (req: Request, res: Response) => {
+/* export const transformImage = async (req: Request, res: Response) => {
   try {
     const { image, prompt: customPrompt }: { image: IFile; prompt: string } =
       req.body;
@@ -153,6 +154,97 @@ export const transformImage = async (req: Request, res: Response) => {
       message: "All APIs failed to transform the image",
     });
     return;
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+    return;
+  }
+};
+
+*/
+
+export const transformImage = async (req: Request, res: Response) => {
+  try {
+    const { image, prompt: customPrompt }: { image: IFile; prompt: string } = req.body;
+    if (!image || !image.uri || !image.name || !image.type) {
+      res.status(400).json({
+        success: false,
+        message: 'Image object with uri, name, and type is required',
+      });
+      return;
+    }
+
+    // Authenticate user and check generation limits
+    const user = await userModel.findById((req as any).user.id);
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    const today = new Date();
+    const lastReset = new Date(user.lastResetDate);
+
+    if (!isSameDay(today, lastReset)) {
+      user.generationCount = 0;
+      user.lastResetDate = new Date(today.setUTCHours(0, 0, 0, 0));
+      await user.save();
+    }
+
+    if (user.generationCount >= 5) {
+      res.status(403).json({
+        success: false,
+        message: 'Daily limit of 5 transformations reached',
+      });
+      return;
+    }
+
+    // Use provided image (already uploaded to Cloudinary)
+    const imageUrl = await mapFiles([image]);
+    const prompt =
+      customPrompt ||
+      'Transform this image into a Studio Ghibli-style anime art, soft pastel colors, dreamy backgrounds, whimsical details in the style of My Neighbor Totoro';
+
+    try {
+      const colabApiUrl = 'https://37c2a7dc838c.ngrok-free.app/'; 
+      const formData = new FormData();
+      formData.append('file', Buffer.from(await (await fetch(imageUrl[0].uri)).arrayBuffer()), image.name);
+      formData.append('prompt', prompt);
+
+      const response = await axios.post(colabApiUrl, formData, {
+        headers: formData.getHeaders(),
+        responseType: 'arraybuffer',
+      });
+
+      // Upload transformed image to Cloudinary
+      const transformedImageBase64 = Buffer.from(response.data).toString('base64');
+      const transformedImageData = {
+        uri: `data:image/jpeg;base64,${transformedImageBase64}`,
+        name: `transformed_${image.name}`,
+        type: 'image/jpeg',
+      };
+      const transformedImageUrl = await mapFiles([transformedImageData]);
+
+      // Save to database
+      const imageRecord = await imageModel.create({
+        prompt,
+        imageUrl: imageUrl[0].uri, // Original image URL
+        transformedImageUrl: transformedImageUrl[0].uri, // Transformed image URL
+        userId: (req as any).user.id,
+      });
+
+      // Update user generation count
+      user.generationCount += 1;
+      await user.save();
+
+      res.status(201).json({ success: true, data: imageRecord });
+      return;
+    } catch (error: any) {
+      console.error('Error with Stable Diffusion API:', error.message);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to transform image with Stable Diffusion',
+      });
+      return;
+    }
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
     return;
