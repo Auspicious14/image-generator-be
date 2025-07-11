@@ -54,7 +54,7 @@ import dotenv from "dotenv";
 import { mapFiles, IFile } from "../../middlewares/files";
 import { isSameDay } from "../../utils/date";
 import { transformationApis } from "../../utils/apis";
-import axios from 'axios';
+import axios from "axios";
 
 dotenv.config();
 
@@ -164,19 +164,19 @@ export const generateImage = async (req: Request, res: Response) => {
 
 export const transformImage = async (req: Request, res: Response) => {
   try {
-    const { image, prompt: customPrompt }: { image: IFile; prompt: string } = req.body;
+    const { image, prompt: customPrompt }: { image: IFile; prompt: string } =
+      req.body;
     if (!image || !image.uri || !image.name || !image.type) {
       res.status(400).json({
         success: false,
-        message: 'Image object with uri, name, and type is required',
+        message: "Image object with uri, name, and type is required",
       });
       return;
     }
 
-    // Authenticate user and check generation limits
     const user = await userModel.findById((req as any).user.id);
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
@@ -192,34 +192,34 @@ export const transformImage = async (req: Request, res: Response) => {
     if (user.generationCount >= 5) {
       res.status(403).json({
         success: false,
-        message: 'Daily limit of 5 transformations reached',
+        message: "Daily limit of 5 transformations reached",
       });
       return;
     }
 
-    // Use provided image (already uploaded to Cloudinary)
     const imageUrl = await mapFiles([image]);
     const prompt =
       customPrompt ||
-      'Transform this image into a Studio Ghibli-style anime art, soft pastel colors, dreamy backgrounds, whimsical details in the style of My Neighbor Totoro';
+      "Transform this image into a Studio Ghibli-style anime art, soft pastel colors, dreamy backgrounds, whimsical details in the style of My Neighbor Totoro";
 
     try {
-      const colabApiUrl = 'https://37c2a7dc838c.ngrok-free.app/'; 
+      const colabApiUrl = "https://37c2a7dc838c.ngrok-free.app/generate";
       const formData = new FormData();
-      formData.append('file', Buffer.from(await (await fetch(imageUrl[0].uri)).arrayBuffer()), image.name);
-      formData.append('prompt', prompt);
+      formData.append("file", imageUrl[0].uri);
+      formData.append("prompt", prompt);
 
       const response = await axios.post(colabApiUrl, formData, {
-        headers: formData.getHeaders(),
-        responseType: 'arraybuffer',
+        responseType: "arraybuffer",
       });
 
       // Upload transformed image to Cloudinary
-      const transformedImageBase64 = Buffer.from(response.data).toString('base64');
+      const transformedImageBase64 = Buffer.from(response.data).toString(
+        "base64"
+      );
       const transformedImageData = {
         uri: `data:image/jpeg;base64,${transformedImageBase64}`,
         name: `transformed_${image.name}`,
-        type: 'image/jpeg',
+        type: "image/jpeg",
       };
       const transformedImageUrl = await mapFiles([transformedImageData]);
 
@@ -238,10 +238,10 @@ export const transformImage = async (req: Request, res: Response) => {
       res.status(201).json({ success: true, data: imageRecord });
       return;
     } catch (error: any) {
-      console.error('Error with Stable Diffusion API:', error.message);
+      console.error("Error with Stable Diffusion API:", error.message);
       res.status(500).json({
         success: false,
-        message: 'Failed to transform image with Stable Diffusion',
+        message: "Failed to transform image with Stable Diffusion",
       });
       return;
     }
